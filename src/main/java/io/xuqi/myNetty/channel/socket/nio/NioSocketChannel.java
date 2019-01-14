@@ -1,7 +1,9 @@
 package io.xuqi.myNetty.channel.socket.nio;
 import io.xuqi.myNetty.channel.Channel;
+import io.xuqi.myNetty.channel.ChannelPromise;
 
 import java.io.IOException;
+import java.net.SocketAddress;
 import java.nio.ByteBuffer;
 import java.nio.channels.SelectionKey;
 import java.nio.channels.SocketChannel;
@@ -16,6 +18,11 @@ public class NioSocketChannel extends AbstractNioChannel{
     @Override
     protected SocketChannel javaChannel() {
         return (SocketChannel) super.javaChannel();
+    }
+
+    @Override
+    public void bind(SocketAddress localAddress, ChannelPromise promise) {
+        throw new RuntimeException("NioSocketChannel不能绑定噢!");
     }
 
     @Override

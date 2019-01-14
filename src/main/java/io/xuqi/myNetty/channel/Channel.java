@@ -4,8 +4,9 @@ import java.net.SocketAddress;
 
 //我这里没有unsafe,所以把unsafe的功能整进Channel了
 public interface Channel {
-    void register(EventLoop eventLoop);
-    void bind(SocketAddress localAddress);
+  //  ChannelFuture register(EventLoop eventLoop);
+    void register(EventLoop eventLoop, ChannelPromise promise);
+    void bind(SocketAddress localAddress, ChannelPromise promise);
     Object doReadMessages();
     EventLoop eventLoop();
 

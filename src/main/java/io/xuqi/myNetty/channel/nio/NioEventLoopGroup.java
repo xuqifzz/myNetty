@@ -1,6 +1,7 @@
 package io.xuqi.myNetty.channel.nio;
 
 import io.xuqi.myNetty.channel.Channel;
+import io.xuqi.myNetty.channel.ChannelFuture;
 import io.xuqi.myNetty.channel.EventLoop;
 import io.xuqi.myNetty.channel.EventLoopGroup;
 
@@ -19,8 +20,8 @@ public class NioEventLoopGroup implements EventLoopGroup {
             eventLoops[i] = new NioEventLoop();
     }
     @Override
-    public void register(Channel channel) {
-         next().register(channel);
+    public ChannelFuture register(Channel channel) {
+         return next().register(channel);
     }
     @Override
     //实现选择算法

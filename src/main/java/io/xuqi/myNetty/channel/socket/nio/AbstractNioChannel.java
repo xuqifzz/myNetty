@@ -2,10 +2,9 @@ package io.xuqi.myNetty.channel.socket.nio;
 
 import io.xuqi.myNetty.channel.Channel;
 import io.xuqi.myNetty.channel.ChannelHandler;
+import io.xuqi.myNetty.channel.ChannelPromise;
 import io.xuqi.myNetty.channel.EventLoop;
 import io.xuqi.myNetty.channel.nio.NioEventLoop;
-
-import java.net.SocketAddress;
 import java.nio.channels.ClosedChannelException;
 import java.nio.channels.SelectableChannel;
 
@@ -31,11 +30,23 @@ public abstract class AbstractNioChannel implements Channel {
 
         }
     }
-    @Override
-    public void register(EventLoop eventLoop){
-        this.eventLoop = (NioEventLoop)eventLoop;
-        doRegister();
 
+    @Override
+    public void register(EventLoop eventLoop, ChannelPromise promise) {
+        this.eventLoop = (NioEventLoop)eventLoop;
+        //确保注册操作是在关联的EventLoop中完成
+        if(eventLoop.inEventLoop()){
+            register0(promise);
+        }else {
+            eventLoop.execute(()-> register0(promise));
+        }
+
+    }
+
+    private void register0(ChannelPromise promise){
+        doRegister();
+        //操作都完成了,设置promise状态为完成
+        promise.setSuccess();
     }
     private void doRegister(){
         try {
@@ -51,8 +62,7 @@ public abstract class AbstractNioChannel implements Channel {
     public NioEventLoop eventLoop() {
         return eventLoop;
     }
-    @Override
-    public void bind(SocketAddress localAddress) {}
+
     protected SelectableChannel javaChannel() {
         return ch;
     }

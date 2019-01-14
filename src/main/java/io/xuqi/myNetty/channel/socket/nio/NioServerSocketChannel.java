@@ -1,6 +1,9 @@
 package io.xuqi.myNetty.channel.socket.nio;
 
 
+import io.xuqi.myNetty.channel.ChannelPromise;
+import io.xuqi.myNetty.channel.EventLoop;
+
 import java.io.IOException;
 import java.net.SocketAddress;
 import java.nio.channels.SelectionKey;
@@ -9,15 +12,18 @@ import java.nio.channels.SocketChannel;
 
 //负责监听端口,接受连接
 public class NioServerSocketChannel extends AbstractNioChannel {
+
     public NioServerSocketChannel() throws IOException {
         super(null, ServerSocketChannel.open(), SelectionKey.OP_ACCEPT);
     }
 
+
     @Override
-    public void bind(SocketAddress localAddress) {
+    public void bind(SocketAddress localAddress,ChannelPromise promise) {
         try {
             //bind操作
             javaChannel().bind(localAddress);
+            promise.setSuccess();
         } catch (IOException e) {
             e.printStackTrace();
         }

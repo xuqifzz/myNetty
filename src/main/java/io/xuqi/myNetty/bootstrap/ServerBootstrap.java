@@ -1,10 +1,7 @@
 package io.xuqi.myNetty.bootstrap;
 
 
-import io.xuqi.myNetty.channel.Channel;
-
-import io.xuqi.myNetty.channel.ChannelHandler;
-import io.xuqi.myNetty.channel.EventLoopGroup;
+import io.xuqi.myNetty.channel.*;
 
 import java.net.InetSocketAddress;
 
@@ -16,9 +13,15 @@ public class ServerBootstrap {
     private EventLoopGroup childGroup;
     private ChannelHandler childHandler;
 
-    public void bind(int port){
-        Channel channel = initAndRegister();
-        channel.bind(new InetSocketAddress(port));
+    public ChannelFuture bind(int port){
+        final ChannelFuture regFuture = initAndRegister();
+        final Channel channel = regFuture.channel();
+        final ChannelPromise promise = new DefaultChannelPromise(channel,channel.eventLoop());
+        regFuture.addListener((future) -> {
+            channel.bind(new InetSocketAddress(port),promise);
+        });
+        return promise;
+
     }
 
     public ServerBootstrap group(EventLoopGroup parentGroup, EventLoopGroup childGroup) {
@@ -36,14 +39,13 @@ public class ServerBootstrap {
         return this;
     }
 
-    private Channel initAndRegister(){
+    private ChannelFuture initAndRegister(){
         try {
             //创建NioServerSocketChannel
             Channel channel = channelClass.newInstance();
             init(channel);
             //注册到主EventLoopGroup
-            parentGroup.register(channel);
-            return channel;
+            return parentGroup.register(channel);
         } catch (Throwable e) {
             e.printStackTrace();
         }
