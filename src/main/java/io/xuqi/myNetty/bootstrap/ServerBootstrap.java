@@ -53,23 +53,27 @@ public class ServerBootstrap {
     }
 
     private void init(Channel channel){
-        channel.setHandler(new ServerBootstrapAcceptor(childGroup,childHandler));
+        ChannelPipeline p = channel.pipeline();
+        p.addLast(new ServerBootstrapAcceptor(childGroup,childHandler));
 
     }
 
-    private static class ServerBootstrapAcceptor implements ChannelHandler{
+    private static class ServerBootstrapAcceptor implements ChannelInboundHandler{
         private final EventLoopGroup childGroup;
         private final ChannelHandler childHandler;
         ServerBootstrapAcceptor(EventLoopGroup childGroup,ChannelHandler childHandler){
             this.childGroup = childGroup;
             this.childHandler = childHandler;
         }
+
         @Override
-        public void channelRead(Object msg) {
+        public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
             final Channel child = (Channel)msg;
-            child.setHandler(childHandler);
+            child.pipeline().addLast(childHandler);
             //在此处将接收到的NioSocketChannel注册到childGroup
             childGroup.register(child);
+
         }
+
     }
 }

@@ -1,10 +1,9 @@
 package io.xuqi.myNetty.channel.socket.nio;
 
-import io.xuqi.myNetty.channel.Channel;
-import io.xuqi.myNetty.channel.ChannelHandler;
-import io.xuqi.myNetty.channel.ChannelPromise;
-import io.xuqi.myNetty.channel.EventLoop;
+import io.xuqi.myNetty.channel.*;
 import io.xuqi.myNetty.channel.nio.NioEventLoop;
+
+import java.net.SocketAddress;
 import java.nio.channels.ClosedChannelException;
 import java.nio.channels.SelectableChannel;
 
@@ -14,15 +13,18 @@ public abstract class AbstractNioChannel implements Channel {
     protected Channel parent;  //父Channel 暂时没用
     private final SelectableChannel ch;  //Nio的Channel
     protected final int readInterestOp;  //关注的操作
-    protected ChannelHandler handler;    //这是我发明的handler
-    @Override
-    public void setHandler(ChannelHandler handler){
-        this.handler = handler;
-    }
+    private final Unsafe unsafe;
+  //  protected ChannelHandler handler;    //这是我发明的handler
+
+    private final DefaultChannelPipeline pipeline;
+
+
 
     //构造函数,接收parent, Nio的Channel以及关注的OP
     protected AbstractNioChannel(Channel parent, SelectableChannel ch, int readInterestOp) {
         this.ch = ch;
+        pipeline = new DefaultChannelPipeline(this);
+        unsafe = new NioUnsafe();
         this.readInterestOp = readInterestOp;
         try {
             ch.configureBlocking(false);
@@ -30,6 +32,17 @@ public abstract class AbstractNioChannel implements Channel {
 
         }
     }
+    @Override
+    public ChannelPipeline pipeline() {
+        return pipeline;
+    }
+
+
+    @Override
+    public ChannelFuture bind(SocketAddress localAddress,ChannelPromise promise) {
+        return pipeline.bind(localAddress,promise);
+    }
+    protected abstract void doBind(SocketAddress localAddress) throws Exception;
 
     @Override
     public void register(EventLoop eventLoop, ChannelPromise promise) {
@@ -66,12 +79,40 @@ public abstract class AbstractNioChannel implements Channel {
     protected SelectableChannel javaChannel() {
         return ch;
     }
-    public void read(){
-        Object msg = doReadMessages();
-        if(msg != null && handler != null){
-            handler.channelRead(msg);
+
+
+
+    @Override
+    public NioUnsafe unsafe() {
+        return (NioUnsafe)unsafe;
+    }
+    abstract Object doReadMessages();
+
+    abstract void doWrite(Object msg, ChannelPromise promise);
+
+
+    public final class NioUnsafe implements Unsafe{
+
+        @Override
+        public void bind(SocketAddress localAddress, ChannelPromise promise) {
+            try {
+                doBind(localAddress);
+                promise.setSuccess();
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
         }
 
+        @Override
+        public void write(Object msg, ChannelPromise promise) {
+            doWrite(msg, promise);
+        }
+        public void read(){
+            Object msg = doReadMessages();
+            if(msg != null){
+                pipeline.fireChannelRead(msg);
+            }
+        }
     }
 
 }

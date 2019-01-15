@@ -15,15 +15,12 @@ public class NioSocketChannel extends AbstractNioChannel{
         super(parent,socket, SelectionKey.OP_READ);
     }
 
+
     @Override
     protected SocketChannel javaChannel() {
         return (SocketChannel) super.javaChannel();
     }
 
-    @Override
-    public void bind(SocketAddress localAddress, ChannelPromise promise) {
-        throw new RuntimeException("NioSocketChannel不能绑定噢!");
-    }
 
     @Override
     public Object doReadMessages() {
@@ -41,4 +38,23 @@ public class NioSocketChannel extends AbstractNioChannel{
         }
         return null;
     }
+
+    @Override
+    void doWrite(Object msg, ChannelPromise promise) {
+        //此处简单处理
+        try {
+            ByteBuffer buffer = (ByteBuffer)msg;
+            javaChannel().write(buffer);
+            promise.setSuccess();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    @Override
+    protected void doBind(SocketAddress localAddress) throws Exception {
+        //暂时没有实现客户端的端口绑定
+    }
+
+
 }

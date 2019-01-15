@@ -86,7 +86,7 @@ public class NioEventLoop implements EventLoop, Runnable {
             final SelectionKey k = i.next();
             final AbstractNioChannel a = (AbstractNioChannel)k.attachment();
             i.remove();
-            a.read();
+            a.unsafe().read();
             if (!i.hasNext()) {
                 break;
             }

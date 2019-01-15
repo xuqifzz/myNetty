@@ -1,8 +1,8 @@
 package io.xuqi.myNetty.channel.socket.nio;
 
 
+
 import io.xuqi.myNetty.channel.ChannelPromise;
-import io.xuqi.myNetty.channel.EventLoop;
 
 import java.io.IOException;
 import java.net.SocketAddress;
@@ -15,18 +15,6 @@ public class NioServerSocketChannel extends AbstractNioChannel {
 
     public NioServerSocketChannel() throws IOException {
         super(null, ServerSocketChannel.open(), SelectionKey.OP_ACCEPT);
-    }
-
-
-    @Override
-    public void bind(SocketAddress localAddress,ChannelPromise promise) {
-        try {
-            //bind操作
-            javaChannel().bind(localAddress);
-            promise.setSuccess();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
     }
 
     @Override
@@ -44,8 +32,18 @@ public class NioServerSocketChannel extends AbstractNioChannel {
     }
 
     @Override
+    protected void doBind(SocketAddress localAddress) throws Exception {
+        javaChannel().bind(localAddress);
+    }
+
+    @Override
     protected ServerSocketChannel javaChannel() {
         return (ServerSocketChannel) super.javaChannel();
+    }
+
+    @Override
+    void doWrite(Object msg, ChannelPromise promise) {
+        //不能写入
     }
 
 }
